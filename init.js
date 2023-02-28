@@ -1,5 +1,5 @@
 // Node Modules
-import { Client, GatewayIntentBits } from 'discord.js';
+import { Client, GatewayIntentBits, Events, Collection } from 'discord.js';
 import { config } from 'dotenv';
 
 // Local Modules
@@ -10,20 +10,28 @@ const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
 // Inits
 config()
+client.commands = new Collection();
 
 // Destructure
-const { getSlashCommands } = SearchCommands()
+const { setSlashCommands } = SearchCommands(client)
 
 // Set Commands
-console.log(getSlashCommands());
+console.log(setSlashCommands());
 
 // Loggin Capturer
-client.on('ready', () => {
+client.on(Events.ClientReady, () => {
   console.log(`Logged in as ${client.user.tag}!`);
+  client.user.setPresence({
+    status: 'online',
+    activity: {
+      name: 'Nipril Server ',
+      type: 'PLAYING',
+    }
+  });
 });
 
 // Interactions Capturer
-client.on('interactionCreate', async (interaction) => {
+client.on(Events.InteractionCreate, async (interaction) => {
   if (!interaction.isCommand()) return;
 
   const command = client.commands.get(interaction.commandName);
@@ -31,7 +39,7 @@ client.on('interactionCreate', async (interaction) => {
   if (!command) return;
 
   try {
-    await command.execute(interaction);
+    await command.play(interaction);
   } catch (error) {
     console.error(error);
     await interaction.reply({
